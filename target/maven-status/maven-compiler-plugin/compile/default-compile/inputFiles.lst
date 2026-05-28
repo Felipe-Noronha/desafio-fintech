@@ -1,4 +1,5 @@
 /app/src/main/java/com/example/desafio/repository/TransactionRepository.java
+/app/src/main/java/com/example/desafio/config/DataInitializer.java
 /app/src/main/java/com/example/desafio/DesafioApplication.java
 /app/src/main/java/com/example/desafio/dto/PixRequest.java
 /app/src/main/java/com/example/desafio/service/SecurityFilter.java

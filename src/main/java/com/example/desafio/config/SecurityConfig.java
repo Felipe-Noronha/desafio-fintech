@@ -29,7 +29,8 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
                 .antMatchers(HttpMethod.POST, "/api/v1/auth/login")
-                .antMatchers("/login");
+                .antMatchers("/login")
+        		.antMatchers("/actuator/prometheus");
     }
 
     @Bean
@@ -41,7 +42,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/login", "/dashboard", "/transfer", "/accounts/manage").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                .antMatchers(HttpMethod.GET, "/actuator/health", "/actuator/prometheus").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v1/accounts").authenticated()
                 .antMatchers(HttpMethod.DELETE, "/api/v1/accounts/**").authenticated()
                 .antMatchers(HttpMethod.POST, "/api/v1/pix").authenticated()

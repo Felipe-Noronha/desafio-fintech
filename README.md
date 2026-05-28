@@ -177,6 +177,10 @@ Os arquivos estão localizados em:
 src/main/webapp/WEB-INF/jsp/
 ```
 
+### Métricas expostas via Prometheus
+A aplicação foi integrada com o **Micrometer Prometheus Registry**. O endpoint nativo do Actuator foi exposto e configurado de forma pública para permitir que servidores Prometheus coletem dados de performance do sistema.
+* **Endpoint de Métricas:** `http://localhost:8080/actuator/prometheus`
+
 ---
 
 ## 10. Limitações e Próximos Passos (Roadmap)
