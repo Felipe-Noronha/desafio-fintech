@@ -343,10 +343,12 @@
         .then(async response => {
             const rawText = await response.text();
             let displayMessage = rawText;
-            
+
             try {
-                const jsonParsed = JSON.parse(rawText);
-                if (jsonParsed.message) displayMessage = jsonParsed.message;
+                if (rawText.startsWith("{")) {
+                    const jsonParsed = JSON.parse(rawText);
+                    if (jsonParsed.message) displayMessage = jsonParsed.message;
+                }
             } catch(e) {}
 
             if (response.ok || response.status === 202) {
@@ -355,7 +357,11 @@
                     window.location.href = '/dashboard';
                 }, 1800);
             } else {
-                showStatus("Falha na transação: " + displayMessage, false);
+                if (displayMessage.includes("Transferência recusada:")) {
+                    showStatus(displayMessage, false);
+                } else {
+                    showStatus("Falha na transação: " + displayMessage, false);
+                }
                 resetFormState();
             }
         })

@@ -16,8 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -75,7 +78,63 @@ class TransferServiceTest {
         verify(accountRepository, times(1)).save(contaDestino);
         verify(transactionRepository, times(1)).save(any());
     }
-    
+
+    @Test
+    @DisplayName("Deve recusar a transferência se o autorizador retornar 403 (RISK_ANALYSIS)")
+    void deveRecusarQuandoAutorizadorRetornar403() {
+        mockUsuarioLogado();
+
+        Account contaOrigem = new Account(1L, 1L, new BigDecimal("500.00"));
+        Account contaDestino = new Account(2L, 2L, new BigDecimal("100.00"));
+
+        when(accountRepository.findByIdWithLock(1L)).thenReturn(Optional.of(contaOrigem));
+        when(accountRepository.findByIdWithLock(2L)).thenReturn(Optional.of(contaDestino));
+
+        String jsonError = "{\"authorized\": false, \"reason\": \"RISK_ANALYSIS\"}";
+        HttpClientErrorException exception403 = new HttpClientErrorException(
+                HttpStatus.FORBIDDEN, 
+                "Forbidden", 
+                jsonError.getBytes(StandardCharsets.UTF_8), 
+                StandardCharsets.UTF_8
+        );
+
+        when(restTemplate.postForEntity(anyString(), any(), eq(Map.class))).thenThrow(exception403);
+
+        assertThrows(SecurityException.class, () -> {
+            transferService.executeTransfer(1L, 2L, new BigDecimal("50.00"));
+        });
+
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
+    @Test
+    @DisplayName("Deve recusar a transferência se o autorizador retornar 500 (Erro Interno)")
+    void deveRecusarQuandoAutorizadorRetornar500() {
+        mockUsuarioLogado();
+
+        Account contaOrigem = new Account(1L, 1L, new BigDecimal("500.00"));
+        Account contaDestino = new Account(2L, 2L, new BigDecimal("100.00"));
+
+        when(accountRepository.findByIdWithLock(1L)).thenReturn(Optional.of(contaOrigem));
+        when(accountRepository.findByIdWithLock(2L)).thenReturn(Optional.of(contaDestino));
+
+        String jsonError = "{\"message\": \"Temporary authorization failure\"}";
+        HttpServerErrorException exception500 = new HttpServerErrorException(
+                HttpStatus.INTERNAL_SERVER_ERROR, 
+                "Internal Server Error", 
+                jsonError.getBytes(StandardCharsets.UTF_8), 
+                StandardCharsets.UTF_8
+        );
+
+        when(restTemplate.postForEntity(anyString(), any(), eq(Map.class))).thenThrow(exception500);
+
+        assertThrows(SecurityException.class, () -> {
+            transferService.executeTransfer(1L, 2L, new BigDecimal("50.00"));
+        });
+
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
     @Test
     @DisplayName("Bloqueio de transferência se a conta de origem não for do próprio dono autenticado")
     void deveBarrarTransferenciaSincronaInvasora() {

@@ -5,12 +5,16 @@ import com.example.desafio.model.Transaction;
 import com.example.desafio.model.User;
 import com.example.desafio.repository.AccountRepository;
 import com.example.desafio.repository.TransactionRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication; 
 import org.springframework.security.core.context.SecurityContextHolder; 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,12 +28,14 @@ public class TransferService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     private final Map<String, Boolean> processedRequests = new ConcurrentHashMap<>();
 
     public TransferService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.objectMapper = new ObjectMapper();
         
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(2000); 
@@ -79,9 +85,11 @@ public class TransferService {
             }
 
             UUID transactionId = UUID.randomUUID();
-            boolean isAuthorized = authorizeTransaction(transactionId, payerId, payeeId, amount);
-            if (!isAuthorized) {
-                throw new SecurityException("Transferência recusada pelo serviço autorizador externo");
+            
+            String authResult = authorizeTransaction(transactionId, payerId, payeeId, amount);
+            
+            if (!"SUCCESS".equals(authResult)) {
+                throw new SecurityException("Transferência recusada: " + authResult);
             }
 
             payerAccount.setBalance(payerAccount.getBalance().subtract(amount));
@@ -105,25 +113,51 @@ public class TransferService {
         }
     }
 
-    private boolean authorizeTransaction(UUID transactionId, Long payerId, Long payeeId, BigDecimal amount) {
+    private String authorizeTransaction(UUID transactionId, Long payerId, Long payeeId, BigDecimal amount) {
+        String url = "https://desafio.rivs.com.br/api/v1/authorize";
+
+        Map<String, Object> requestBody = new ConcurrentHashMap<>();
+        requestBody.put("transactionId", transactionId.toString());
+        requestBody.put("payerId", payerId);
+        requestBody.put("payeeId", payeeId);
+        requestBody.put("amount", amount);
+
         try {
-            String url = "https://desafio.rivs.com.br/api/v1/authorize";
-
-            Map<String, Object> requestBody = new ConcurrentHashMap<>();
-            requestBody.put("transactionId", transactionId.toString());
-            requestBody.put("payerId", payerId);
-            requestBody.put("payeeId", payeeId);
-            requestBody.put("amount", amount);
-
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestBody, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Boolean authorized = (Boolean) response.getBody().get("authorized");
-                return authorized != null && authorized;
+                return (authorized != null && authorized) ? "SUCCESS" : "Não autorizada pelo parceiro";
             }
-            return false;
+            return "Erro inesperado na validação";
+            
+        } catch (HttpClientErrorException.Forbidden e) {
+            try {
+                String responseBodyString = e.getResponseBodyAsString();
+                Map responseBody = objectMapper.readValue(responseBodyString, Map.class);
+                if (responseBody != null && responseBody.containsKey("reason")) {
+                    return "RISK_ANALYSIS".equals(responseBody.get("reason")) 
+                            ? "Reprovado na Análise de Risco" 
+                            : responseBody.get("reason").toString();
+                }
+            } catch (Exception ex) { }
+            return "Negada por suspeita de fraude";
+            
+        } catch (HttpServerErrorException.InternalServerError e) {
+            try {
+                String responseBodyString = e.getResponseBodyAsString();
+                Map responseBody = objectMapper.readValue(responseBodyString, Map.class);
+                if (responseBody != null && responseBody.containsKey("message")) {
+                    return responseBody.get("message").toString();
+                }
+            } catch (Exception ex) { }
+            return "Falha temporária no sistema autorizador externo";
+            
+        } catch (ResourceAccessException e) {
+            return "Tempo limite esgotado ao consultar o autorizador";
+            
         } catch (Exception e) {
-            return false; 
+            return "Serviço de autorização indisponível no momento";
         }
     }
 }
