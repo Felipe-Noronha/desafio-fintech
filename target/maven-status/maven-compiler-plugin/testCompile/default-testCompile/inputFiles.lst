@@ -1,0 +1,6 @@
+/app/src/test/java/com/example/desafio/service/PixProducerTest.java
+/app/src/test/java/com/example/desafio/service/PixConsumerTest.java
+/app/src/test/java/com/example/desafio/service/AccountServiceTest.java
+/app/src/test/java/com/example/desafio/security/SecurityFilterTest.java
+/app/src/test/java/com/example/desafio/service/TransferServiceTest.java
+/app/src/test/java/com/example/desafio/controller/AuthControllerTest.java

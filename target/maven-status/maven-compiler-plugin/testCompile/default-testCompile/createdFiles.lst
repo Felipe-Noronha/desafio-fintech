@@ -1,0 +1,6 @@
+com/example/desafio/service/AccountServiceTest.class
+com/example/desafio/service/PixProducerTest.class
+com/example/desafio/security/SecurityFilterTest.class
+com/example/desafio/service/TransferServiceTest.class
+com/example/desafio/service/PixConsumerTest.class
+com/example/desafio/controller/AuthControllerTest.class
