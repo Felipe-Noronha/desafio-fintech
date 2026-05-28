@@ -6,6 +6,7 @@ import com.example.desafio.model.User;
 import com.example.desafio.repository.AccountRepository;
 import com.example.desafio.repository.TransactionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication; 
@@ -32,6 +33,7 @@ public class TransferService {
 
     private final Map<String, Boolean> processedRequests = new ConcurrentHashMap<>();
 
+    @Autowired
     public TransferService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
@@ -42,6 +44,13 @@ public class TransferService {
         factory.setReadTimeout(3000);   
         
         this.restTemplate = new RestTemplate(factory);
+    }
+
+    public TransferService(AccountRepository accountRepository, TransactionRepository transactionRepository, RestTemplate restTemplate) {
+        this.accountRepository = accountRepository;
+        this.transactionRepository = transactionRepository;
+        this.restTemplate = restTemplate;
+        this.objectMapper = new ObjectMapper();
     }
 
     @Transactional

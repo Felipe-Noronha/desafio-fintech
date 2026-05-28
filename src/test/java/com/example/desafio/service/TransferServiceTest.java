@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -37,7 +36,7 @@ class TransferServiceTest {
     @Mock private Authentication authentication;
     @Mock private SecurityContext securityContext;
 
-    @InjectMocks private TransferService transferService;
+    private TransferService transferService;
 
     private User clienteLogado;
 
@@ -48,6 +47,8 @@ class TransferServiceTest {
         clienteLogado.setRole("CUSTOMER");
 
         SecurityContextHolder.setContext(securityContext);
+
+        transferService = new TransferService(accountRepository, transactionRepository, restTemplate);
     }
 
     private void mockUsuarioLogado() {

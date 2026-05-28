@@ -1,12 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.example.desafio.service.TransferServiceTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 6.704 s <<< FAILURE! - in com.example.desafio.service.TransferServiceTest
-deveRecusarQuandoAutorizadorRetornar403  Time elapsed: 1.855 s  <<< FAILURE!
-org.opentest4j.AssertionFailedError: Expected java.lang.SecurityException to be thrown, but nothing was thrown.
-	at com.example.desafio.service.TransferServiceTest.deveRecusarQuandoAutorizadorRetornar403(TransferServiceTest.java:103)
-
-deveRecusarQuandoAutorizadorRetornar500  Time elapsed: 0.523 s  <<< FAILURE!
-org.opentest4j.AssertionFailedError: Expected java.lang.SecurityException to be thrown, but nothing was thrown.
-	at com.example.desafio.service.TransferServiceTest.deveRecusarQuandoAutorizadorRetornar500(TransferServiceTest.java:131)
-
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.478 s - in com.example.desafio.service.TransferServiceTest

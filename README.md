@@ -221,6 +221,11 @@ As seguintes implementações foram mapeadas como fora do escopo inicial para es
 * **Status Atual:** As movimentações de saldo e o histórico básico de sucesso ou falha das transações de Pix e Transferências são persistidos diretamente na tabela `tb_transaction`, garantindo a consistência dos dados exigida pelo negócio.
 * **Abordagem de Escopo Real:** Um sistema financeiro em produção exige uma trilha de auditoria imutável e separada, gravando logs de alteração baseados no padrão *Event Sourcing*. Em uma evolução do ecossistema, toda ação administrativa (como abertura e encerramento de contas por perfis `ADMIN`) ou tentativas de acessos negados seriam publicadas em um tópico exclusivo do Kafka (`fintech-audit-log`) para armazenamento e compliance, sem misturar com o banco de dados relacional operacional.
 
+## 12. Como Testar os Endpoints
+
+Para facilitar a validação e os testes dos endpoints da API, disponibilizei uma coleção pronta para uso. O arquivo encontra-se na raiz deste projeto:
+
+* **Postman Collection:** `Desafio Dunnas - Gateway de Pagamentos.postman_collection.json`
 
 
 
